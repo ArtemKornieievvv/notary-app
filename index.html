@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Запис до нотаріуса</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(rgba(255,255,255,0.8), rgba(255,255,255,0.8)),
+                        url('https://img.freepik.com/free-photo/old-quill-pen-parchment-paper_1268-15494.jpg');
+            background-size: cover;
+            background-attachment: fixed;
+            color: #2c3e50;
+            padding: 20px;
+            margin: 0;
+        }
+        .container { max-width: 500px; margin: 0 auto; }
+        h2 { text-align: center; color: #1a1a1a; }
+        input, select {
+            width: 100%; padding: 12px; margin: 10px 0;
+            border: 1px solid #bdc3c7; border-radius: 8px; box-sizing: border-box;
+        }
+        .service-list { max-height: 300px; overflow-y: auto; background: rgba(255,255,255,0.9); border-radius: 8px; }
+        .service-item { padding: 12px; border-bottom: 1px solid #eee; cursor: pointer; }
+        .service-item:hover { background: #f1f1f1; }
+        .selected { background: #3498db !important; color: white; }
+        button {
+            width: 100%; padding: 15px; background: #2c3e50; color: white;
+            border: none; border-radius: 8px; font-size: 16px; margin-top: 20px; cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>🏛 Оберіть послугу та дату</h2>
+        <input type="text" id="search" placeholder="🔍 Пошук послуги..." onkeyup="filterServices()">
+
+        <div class="service-list" id="services">
+            </div>
+
+        <h3>📅 Оберіть дату візиту</h3>
+        <input type="date" id="date_input">
+
+        <button onclick="sendData()">Підтвердити вибір</button>
+    </div>
+
+    <script>
+        const services = [
+            "Довіреність на розпорядження майном", "Довіреність на керування авто",
+            "Заява про згоду на виїзд дитини", "Заява про відмову від спадщини",
+            "Договір купівлі-продажу квартири", "Договір дарування нерухомості",
+            "Заповіт", "Засвідчення копій документів", "Засвідчення підпису",
+            "Оформлення спадщини", "Переклад документів", "Договір оренди житла"
+        ]; // Додай решту 20 послуг сюди
+
+        let selectedService = "";
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+
+        function renderServices() {
+            const container = document.getElementById('services');
+            container.innerHTML = services.map(s => `
+                <div class="service-item" onclick="selectService(this, '${s}')">${s}</div>
+            `).join('');
+        }
+
+        function filterServices() {
+            const query = document.getElementById('search').value.toLowerCase();
+            const items = document.querySelectorAll('.service-item');
+            items.forEach(item => {
+                item.style.display = item.innerText.toLowerCase().includes(query) ? 'block' : 'none';
+            });
+        }
+
+        function selectService(el, name) {
+            document.querySelectorAll('.service-item').forEach(i => i.classList.remove('selected'));
+            el.classList.add('selected');
+            selectedService = name;
+        }
+
+        function sendData() {
+            const date = document.getElementById('date_input').value;
+            if (!selectedService || !date) {
+                alert("Будь ласка, оберіть послугу та дату!");
+                return;
+            }
+            const data = { service: selectedService, date: date };
+            tg.sendData(JSON.stringify(data)); // Відправка даних боту
+        }
+
+        renderServices();
+    </script>
+</body>
+</html>
