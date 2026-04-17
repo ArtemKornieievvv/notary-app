@@ -19,87 +19,91 @@
             align-items: center;
         }
         .container { width: 100%; max-width: 400px; }
-        h2 { text-align: center; font-size: 1.4em; margin-bottom: 10px; }
+        h2 { text-align: center; font-size: 1.4em; margin-bottom: 5px; }
+        .schedule-info { text-align: center; font-size: 0.85em; color: #7f8c8d; margin-bottom: 15px; }
         input {
             width: 100%; padding: 12px; margin: 10px 0;
             border: 2px solid #2c3e50; border-radius: 10px; box-sizing: border-box;
             font-size: 16px; outline: none;
         }
         .service-list { 
-            max-height: 250px; overflow-y: auto; 
+            max-height: 200px; overflow-y: auto; 
             background: white; border-radius: 10px; 
             border: 1px solid #ddd; margin-bottom: 20px;
         }
-        .service-item { 
-            padding: 15px; border-bottom: 1px solid #eee; 
-            cursor: pointer; transition: 0.2s;
-        }
-        .service-item:active { background: #ecf0f1; }
+        .service-item { padding: 15px; border-bottom: 1px solid #eee; cursor: pointer; }
         .selected { background: #2c3e50 !important; color: white; }
         button {
             width: 100%; padding: 18px; background: #27ae60; color: white;
             border: none; border-radius: 12px; font-size: 18px; font-weight: bold;
-            cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            cursor: pointer;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h2>🏛 Послуги нотаріуса</h2>
-        <input type="text" id="search" placeholder="🔍 Пошук послуги..." onkeyup="filterServices()">
+        <div class="schedule-info">Пн-Пт: 09:00-18:00 | Сб: 10:00-16:00 | Нд: Вихідний</div>
         
+        <input type="text" id="search" placeholder="🔍 Пошук послуги..." onkeyup="filterServices()">
         <div class="service-list" id="services"></div>
 
         <h3>📅 Оберіть дату</h3>
         <input type="date" id="date_input">
 
-        <button onclick="sendData()">ПІДТВЕРДИТИ ЗАПИС</button>
+        <button onclick="sendData()">ПІДТВЕРДИТИ</button>
     </div>
 
     <script>
         const services = [
-            "Довіреність на розпорядження майном", "Довіреність на керування авто",
-            "Заява про згоду на виїзд дитини", "Заява про відмову від спадщини",
-            "Договір купівлі-продажу квартири", "Договір дарування нерухомості",
-            "Заповіт", "Засвідчення копій документів", "Засвідчення підпису",
-            "Оформлення спадщини", "Переклад документів", "Договір оренди житла",
-            "Консультація нотаріуса", "Шлюбний договір", "Реєстрація ФОП"
+            "Довіреність на майно", "Довіреність на авто", "Згода на виїзд дитини",
+            "Відмова від спадщини", "Купівля-продаж нерухомості", "Дарування",
+            "Заповіт", "Засвідчення копій", "Засвідчення підпису",
+            "Спадщина", "Переклад", "Оренда", "Консультація", "Шлюбний договір"
         ];
 
         let selectedService = "";
         const tg = window.Telegram.WebApp;
         tg.expand();
 
+        // Установка минимальной даты - сегодня
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('date_input').setAttribute('min', today);
+
         function renderServices() {
             const container = document.getElementById('services');
-            container.innerHTML = services.map(s => `
-                <div class="service-item" onclick="selectService(this, '${s}')">${s}</div>
-            `).join('');
+            container.innerHTML = services.map(s => `<div class="service-item" onclick="selectService(this, '${s}')">${s}</div>`).join('');
         }
 
         function filterServices() {
             const query = document.getElementById('search').value.toLowerCase();
             const items = document.querySelectorAll('.service-item');
-            items.forEach(item => {
-                item.style.display = item.innerText.toLowerCase().includes(query) ? 'block' : 'none';
-            });
+            items.forEach(item => { item.style.display = item.innerText.toLowerCase().includes(query) ? 'block' : 'none'; });
         }
 
         function selectService(el, name) {
             document.querySelectorAll('.service-item').forEach(i => i.classList.remove('selected'));
             el.classList.add('selected');
             selectedService = name;
-            document.getElementById('search').value = name; // Вписываем в строку поиска
+            document.getElementById('search').value = name;
         }
 
         function sendData() {
-            const date = document.getElementById('date_input').value;
-            if (!selectedService || !date) {
-                tg.showAlert("Будь ласка, оберіть послугу та дату!");
+            const dateStr = document.getElementById('date_input').value;
+            if (!selectedService || !dateStr) {
+                tg.showAlert("Оберіть послугу та дату!");
                 return;
             }
-            const result = { service: selectedService, date: date };
-            tg.sendData(JSON.stringify(result)); // Теперь это сработает
+
+            const selectedDate = new Date(dateStr);
+            if (selectedDate.getDay() === 0) { // 0 - это воскресенье
+                tg.showAlert("Неділя — вихідний день. Будь ласка, оберіть іншу дату.");
+                return;
+            }
+
+            const result = { service: selectedService, date: dateStr };
+            tg.sendData(JSON.stringify(result));
+            tg.close(); // Принудительно закрываем приложение
         }
 
         renderServices();
