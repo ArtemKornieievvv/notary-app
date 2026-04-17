@@ -7,43 +7,53 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(rgba(255,255,255,0.8), rgba(255,255,255,0.8)),
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(rgba(255,255,255,0.85), rgba(255,255,255,0.85)), 
                         url('https://img.freepik.com/free-photo/old-quill-pen-parchment-paper_1268-15494.jpg');
             background-size: cover;
             background-attachment: fixed;
             color: #2c3e50;
             padding: 20px;
-            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
-        .container { max-width: 500px; margin: 0 auto; }
-        h2 { text-align: center; color: #1a1a1a; }
-        input, select {
+        .container { width: 100%; max-width: 400px; }
+        h2 { text-align: center; font-size: 1.4em; margin-bottom: 10px; }
+        input {
             width: 100%; padding: 12px; margin: 10px 0;
-            border: 1px solid #bdc3c7; border-radius: 8px; box-sizing: border-box;
+            border: 2px solid #2c3e50; border-radius: 10px; box-sizing: border-box;
+            font-size: 16px; outline: none;
         }
-        .service-list { max-height: 300px; overflow-y: auto; background: rgba(255,255,255,0.9); border-radius: 8px; }
-        .service-item { padding: 12px; border-bottom: 1px solid #eee; cursor: pointer; }
-        .service-item:hover { background: #f1f1f1; }
-        .selected { background: #3498db !important; color: white; }
+        .service-list { 
+            max-height: 250px; overflow-y: auto; 
+            background: white; border-radius: 10px; 
+            border: 1px solid #ddd; margin-bottom: 20px;
+        }
+        .service-item { 
+            padding: 15px; border-bottom: 1px solid #eee; 
+            cursor: pointer; transition: 0.2s;
+        }
+        .service-item:active { background: #ecf0f1; }
+        .selected { background: #2c3e50 !important; color: white; }
         button {
-            width: 100%; padding: 15px; background: #2c3e50; color: white;
-            border: none; border-radius: 8px; font-size: 16px; margin-top: 20px; cursor: pointer;
+            width: 100%; padding: 18px; background: #27ae60; color: white;
+            border: none; border-radius: 12px; font-size: 18px; font-weight: bold;
+            cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h2>🏛 Оберіть послугу та дату</h2>
+        <h2>🏛 Послуги нотаріуса</h2>
         <input type="text" id="search" placeholder="🔍 Пошук послуги..." onkeyup="filterServices()">
+        
+        <div class="service-list" id="services"></div>
 
-        <div class="service-list" id="services">
-            </div>
-
-        <h3>📅 Оберіть дату візиту</h3>
+        <h3>📅 Оберіть дату</h3>
         <input type="date" id="date_input">
 
-        <button onclick="sendData()">Підтвердити вибір</button>
+        <button onclick="sendData()">ПІДТВЕРДИТИ ЗАПИС</button>
     </div>
 
     <script>
@@ -52,8 +62,9 @@
             "Заява про згоду на виїзд дитини", "Заява про відмову від спадщини",
             "Договір купівлі-продажу квартири", "Договір дарування нерухомості",
             "Заповіт", "Засвідчення копій документів", "Засвідчення підпису",
-            "Оформлення спадщини", "Переклад документів", "Договір оренди житла"
-        ]; // Додай решту 20 послуг сюди
+            "Оформлення спадщини", "Переклад документів", "Договір оренди житла",
+            "Консультація нотаріуса", "Шлюбний договір", "Реєстрація ФОП"
+        ];
 
         let selectedService = "";
         const tg = window.Telegram.WebApp;
@@ -78,16 +89,17 @@
             document.querySelectorAll('.service-item').forEach(i => i.classList.remove('selected'));
             el.classList.add('selected');
             selectedService = name;
+            document.getElementById('search').value = name; // Вписываем в строку поиска
         }
 
         function sendData() {
             const date = document.getElementById('date_input').value;
             if (!selectedService || !date) {
-                alert("Будь ласка, оберіть послугу та дату!");
+                tg.showAlert("Будь ласка, оберіть послугу та дату!");
                 return;
             }
-            const data = { service: selectedService, date: date };
-            tg.sendData(JSON.stringify(data)); // Відправка даних боту
+            const result = { service: selectedService, date: date };
+            tg.sendData(JSON.stringify(result)); // Теперь это сработает
         }
 
         renderServices();
